@@ -12,7 +12,10 @@ import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.domain.request.UserLoginRequest;
 import com.simple.maopao.model.domain.request.UserRegisterRequest;
 import com.simple.maopao.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +23,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.simple.maopao.contant.UserConstant.USER_LOGIN_STATE;
@@ -32,10 +36,14 @@ import static com.simple.maopao.contant.UserConstant.USER_LOGIN_STATE;
 @RestController
 @RequestMapping("/user")
 @CrossOrigin(origins = {"http://localhost:5173"}, allowCredentials = "true")
+@Slf4j
 public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private RedisTemplate<String, Object> defaultRedisTemplate;
 
     /**
      * 用户注册
@@ -78,6 +86,9 @@ public class UserController {
             return ResultUtils.error(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.userLogin(userAccount, userPassword, request);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
         return ResultUtils.success(user);
     }
 
@@ -156,9 +167,28 @@ public class UserController {
      */
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(@RequestParam long pageSize, @RequestParam long pageNum, HttpServletRequest request) {
+//        User loginUser = userService.getLoginUser(request);
+        // 为了防止多个项目使用同一个redis产生冲突，key的命名可以设计一下，带上当前系统名称
+//        String key = String.format("maopao:user:recommend:%s", loginUser.getId());
+        // 由于默认主页推荐用户列表没有根据不同用户进行推荐，所以缓存就不带上用户id进行区分。
+        String key = "maopao:user:recommend";
+        ValueOperations<String, Object> opsForValue = defaultRedisTemplate.opsForValue();
+        // 如果有缓存优先读取缓存
+        Page<User> userPage = (Page<User>) opsForValue.get(key);
+        if (userPage != null) {
+            return ResultUtils.success(userPage);
+        }
+
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
-//        List<User> list = userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+        List<User> safeList = userList.getRecords().stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+        userList.setRecords(safeList);
+        // 写入缓存
+        try {
+            opsForValue.set(key, userList, 3 * 60 * 60, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("redis存储用户列表失败！");
+        }
         return ResultUtils.success(userList);
     }
 

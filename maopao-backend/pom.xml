@@ -55,11 +55,17 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <version>2.6.4</version>
         </dependency>
-        <!--session集成redis-->
+        <!--spring session整合redis-->
         <dependency>
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-data-redis</artifactId>
             <version>2.6.4</version>
+        </dependency>
+        <!--直接引入https://redisson.pro/docs/getting-started/-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.17.5</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

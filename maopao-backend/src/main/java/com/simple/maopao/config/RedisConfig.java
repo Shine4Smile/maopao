@@ -15,7 +15,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 @Configuration
-@EnableRedisHttpSession
+@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 3 * 60 * 60)
 public class RedisConfig {
 
     // 专为 Session 配置的 ObjectMapper，命名并限定作用域
@@ -25,7 +25,8 @@ public class RedisConfig {
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         objectMapper.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
-        objectMapper.deactivateDefaultTyping(); // 禁用 @class 字段
+        // 禁用 @class 字段
+        objectMapper.deactivateDefaultTyping();
         return objectMapper;
     }
 
@@ -52,14 +53,16 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer()); // 默认带 @class 字段
+        // 默认带 @class 字段
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer()); // 默认带 @class 字段
+        // 默认带 @class 字段
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         template.afterPropertiesSet();
         return template;
     }
 
-    // 强制 Session 使用专用序列化器
+    // 强制 Session 使用专用序列化器，替代默认的JdkSerializationRedisSerializer
     @Bean(name = "springSessionDefaultRedisSerializer")
     public RedisSerializer<Object> springSessionDefaultRedisSerializer(
             @Qualifier("sessionObjectMapper") ObjectMapper objectMapper // 明确指定 Session 专用 ObjectMapper

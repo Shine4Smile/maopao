@@ -10,13 +10,14 @@ spring:
     password: 123
   # session 失效时间
   session:
-    timeout: 86400
+    #    timeout: 86400 #使用@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 3 * 60 * 60)配置session过期时间，注解优先与配置
     # redis配置
     store-type: redis # 默认是none，存储在服务器
   redis:
     port: 6379
-    host: localhost
-  database: 0
+    host: 127.0.0.1
+    database: 0
+    redissonDatabase: 3
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher # springboot版本>2.6集成swagger2需添加该配置
