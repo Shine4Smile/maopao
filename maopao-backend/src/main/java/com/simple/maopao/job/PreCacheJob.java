@@ -42,8 +42,9 @@ public class PreCacheJob {
     public void doCacheRecommendUser() {
         RLock lock = redissonClient.getLock("maopao:precache:docache:lock");
         try {
-            // 只有一个线程能获取锁
-            if (lock.tryLock(0, 3, TimeUnit.SECONDS)) {
+            // 只有一个线程能获取锁，所以等待时间必须为0
+            // 使用redisson看门狗（默认时间30s,每10秒自动续期）机制，时不能指定过期时间。当前进程挂掉（debug也会被当作宕机）看门狗线程也会停止不会自动续期
+            if (lock.tryLock(0, -1, TimeUnit.SECONDS)) {
                 String key = "maopao:user:recommend";
                 QueryWrapper<User> queryWrapper = new QueryWrapper<>();
                 Page<User> userList = userService.page(new Page<>(1, 20), queryWrapper);
@@ -55,15 +56,16 @@ public class PreCacheJob {
                 } catch (Exception e) {
                     log.error("redis存储用户列表失败！");
                 }
+            } else {
+                log.warn("doCacheRecommendUser任务已被进程占用！");
             }
         } catch (InterruptedException e) {
             log.error("预缓存异常");
         } finally {
+            // 避免释放掉其他线程的锁
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
         }
-
     }
-
 }
