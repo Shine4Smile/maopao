@@ -7,7 +7,9 @@ import com.simple.maopao.common.ErrorCode;
 import com.simple.maopao.common.ResultUtils;
 import com.simple.maopao.exception.BusinessException;
 import com.simple.maopao.model.domain.Team;
+import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
+import com.simple.maopao.model.request.TeamAddRequest;
 import com.simple.maopao.service.TeamService;
 import com.simple.maopao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -36,15 +39,15 @@ public class TeamController {
 
 
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
+        if (teamAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean save = teamService.save(team);
-        if (!save) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "新增队伍失败！");
-        }
-        return ResultUtils.success(team.getId());
+        User loginUser = userService.getLoginUser(request);
+        Team team = new Team();
+        BeanUtils.copyProperties(teamAddRequest, team);
+        long teamId = teamService.addTeam(team, loginUser);
+        return ResultUtils.success(teamId);
     }
 
     @PostMapping("/update")
@@ -101,7 +104,7 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Team team = new Team();
-        BeanUtils.copyProperties(team, teamQuery);
+        BeanUtils.copyProperties(teamQuery, team);
         Page<Team> page = new Page<>(teamQuery.getPageNum(), teamQuery.getPageSize());
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
         Page<Team> resPage = teamService.page(page, queryWrapper);
