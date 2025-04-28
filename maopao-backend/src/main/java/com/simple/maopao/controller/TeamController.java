@@ -10,6 +10,7 @@ import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.request.TeamAddRequest;
+import com.simple.maopao.model.request.TeamJoinRequest;
 import com.simple.maopao.model.request.TeamUpdateRequest;
 import com.simple.maopao.model.vo.TeamUserVO;
 import com.simple.maopao.service.TeamService;
@@ -61,7 +62,7 @@ public class TeamController {
     /**
      * 更新队伍信息
      *
-     * @param team
+     * @param updateRequest
      * @return
      */
     @PostMapping("/update")
@@ -147,5 +148,21 @@ public class TeamController {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
         Page<Team> resPage = teamService.page(page, queryWrapper);
         return ResultUtils.success(resPage);
+    }
+
+    /**
+     * 加入队伍
+     *
+     * @param joinRequest
+     * @return
+     */
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest joinRequest, HttpServletRequest request) {
+        if (joinRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean res = teamService.joinTeam(joinRequest, loginUser);
+        return ResultUtils.success(res);
     }
 }
