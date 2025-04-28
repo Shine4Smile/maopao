@@ -3,6 +3,11 @@ package com.simple.maopao.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
+import com.simple.maopao.model.dto.TeamQuery;
+import com.simple.maopao.model.request.TeamUpdateRequest;
+import com.simple.maopao.model.vo.TeamUserVO;
+
+import java.util.List;
 
 /**
  * @author Simple
@@ -19,4 +24,21 @@ public interface TeamService extends IService<Team> {
      */
     long addTeam(Team team, User loginUser);
 
+    /**
+     * 搜索队伍
+     *
+     * @param teamQuery
+     * @param isAdmin
+     * @return
+     */
+    List<TeamUserVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
+
+    /**
+     * 更新队伍信息
+     *
+     * @param updateRequest
+     * @param loginUser
+     * @return
+     */
+    boolean updateTeam(TeamUpdateRequest updateRequest, User loginUser);
 }

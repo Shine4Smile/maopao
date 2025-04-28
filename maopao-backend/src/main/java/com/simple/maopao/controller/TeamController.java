@@ -10,6 +10,8 @@ import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.request.TeamAddRequest;
+import com.simple.maopao.model.request.TeamUpdateRequest;
+import com.simple.maopao.model.vo.TeamUserVO;
 import com.simple.maopao.service.TeamService;
 import com.simple.maopao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +39,13 @@ public class TeamController {
     @Resource
     private TeamService teamService;
 
-
+    /**
+     * 创建队伍
+     *
+     * @param teamAddRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/add")
     public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
         if (teamAddRequest == null) {
@@ -50,18 +58,31 @@ public class TeamController {
         return ResultUtils.success(teamId);
     }
 
+    /**
+     * 更新队伍信息
+     *
+     * @param team
+     * @return
+     */
     @PostMapping("/update")
-    public BaseResponse<Long> updateTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest updateRequest, HttpServletRequest request) {
+        if (updateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean save = teamService.updateById(team);
+        User loginUser = userService.getLoginUser(request);
+        boolean save = teamService.updateTeam(updateRequest, loginUser);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新队伍失败！");
         }
-        return ResultUtils.success(team.getId());
+        return ResultUtils.success(true);
     }
 
+    /**
+     * 删除队伍
+     *
+     * @param id
+     * @return
+     */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteTeam(@RequestBody long id) {
         if (id <= 0) {
@@ -74,6 +95,12 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
+    /**
+     * 根据队伍id查询队伍信息
+     *
+     * @param id
+     * @return
+     */
     @GetMapping("/getById")
     public BaseResponse<Team> getTeamById(@RequestParam long id) {
         if (id <= 0) {
@@ -86,18 +113,29 @@ public class TeamController {
         return ResultUtils.success(team);
     }
 
+    /**
+     * 查询队伍列表
+     *
+     * @param teamQuery
+     * @param request
+     * @return
+     */
     @GetMapping("/list")
-    public BaseResponse<List<Team>> listTeams(TeamQuery teamQuery) {
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery, HttpServletRequest request) {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Team team = new Team();
-        BeanUtils.copyProperties(team, teamQuery);
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> resList = teamService.list(queryWrapper);
+        boolean isAdmin = userService.isAdmin(request);
+        List<TeamUserVO> resList = teamService.listTeams(teamQuery, isAdmin);
         return ResultUtils.success(resList);
     }
 
+    /**
+     * 分页查询队伍列表
+     *
+     * @param teamQuery
+     * @return
+     */
     @GetMapping("/list/page")
     public BaseResponse<Page<Team>> listTeamsByPage(TeamQuery teamQuery) {
         if (teamQuery == null) {

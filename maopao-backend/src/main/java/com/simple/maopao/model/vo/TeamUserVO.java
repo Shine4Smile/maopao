@@ -1,6 +1,5 @@
-package com.simple.maopao.model.domain;
+package com.simple.maopao.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -8,17 +7,16 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 队伍
- *
- * @TableName team
+ * 队伍和用户信息封装类
  */
-@TableName(value = "team")
 @Data
-public class Team implements Serializable {
+public class TeamUserVO implements Serializable {
+
+
+    private static final long serialVersionUID = 3955442012533980720L;
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -39,6 +37,7 @@ public class Team implements Serializable {
     /**
      * 过期时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date expireTime;
 
     /**
@@ -50,11 +49,6 @@ public class Team implements Serializable {
      * 0 - 公开，1 - 私有，2 - 加密
      */
     private Integer status;
-
-    /**
-     * 密码
-     */
-    private String password;
 
     /**
      * 创建时间
@@ -69,12 +63,7 @@ public class Team implements Serializable {
     private Date updateTime;
 
     /**
-     * 是否删除
+     * 创建人
      */
-    @TableLogic
-    private Integer isDelete;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-
+    private UserVO user;
 }

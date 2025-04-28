@@ -1,24 +1,20 @@
-package com.simple.maopao.model.dto;
+package com.simple.maopao.model.request;
 
-import com.simple.maopao.common.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.util.Date;
 
 /**
- * 队伍查询封装类
+ * 队伍信息更新请求体
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class TeamQuery extends PageRequest {
+public class TeamUpdateRequest {
+
+
     /**
      * id
      */
     private Long id;
-
-    /**
-     * 搜索词
-     */
-    private String searchText;
 
     /**
      * 队伍名称
@@ -36,12 +32,19 @@ public class TeamQuery extends PageRequest {
     private Integer maxNum;
 
     /**
-     * 用户id（队长 id）
+     * 过期时间
      */
-    private Long userId;
+    private Date expireTime;
 
     /**
      * 0 - 公开，1 - 私有，2 - 加密
      */
     private Integer status;
+
+    /**
+     * 密码
+     */
+    private String password;
+
+
 }
