@@ -5,6 +5,7 @@ import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.request.TeamJoinRequest;
+import com.simple.maopao.model.request.TeamQuitRequest;
 import com.simple.maopao.model.request.TeamUpdateRequest;
 import com.simple.maopao.model.vo.TeamUserVO;
 
@@ -50,4 +51,12 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean joinTeam(TeamJoinRequest joinRequest, User loginUser);
+
+    /**
+     * 退出队伍
+     *
+     * @param quitRequest
+     * @return
+     */
+    boolean quitTeam(TeamQuitRequest quitRequest, User loginUser);
 }

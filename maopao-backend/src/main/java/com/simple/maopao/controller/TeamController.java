@@ -11,6 +11,7 @@ import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.request.TeamAddRequest;
 import com.simple.maopao.model.request.TeamJoinRequest;
+import com.simple.maopao.model.request.TeamQuitRequest;
 import com.simple.maopao.model.request.TeamUpdateRequest;
 import com.simple.maopao.model.vo.TeamUserVO;
 import com.simple.maopao.service.TeamService;
@@ -163,6 +164,22 @@ public class TeamController {
         }
         User loginUser = userService.getLoginUser(request);
         boolean res = teamService.joinTeam(joinRequest, loginUser);
+        return ResultUtils.success(res);
+    }
+
+    /**
+     * 退出队伍
+     *
+     * @param quitRequest
+     * @return
+     */
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest quitRequest, HttpServletRequest request) {
+        if (quitRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean res = teamService.quitTeam(quitRequest, loginUser);
         return ResultUtils.success(res);
     }
 }
