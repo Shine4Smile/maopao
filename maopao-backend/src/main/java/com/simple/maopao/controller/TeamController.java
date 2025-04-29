@@ -9,10 +9,7 @@ import com.simple.maopao.exception.BusinessException;
 import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
-import com.simple.maopao.model.request.TeamAddRequest;
-import com.simple.maopao.model.request.TeamJoinRequest;
-import com.simple.maopao.model.request.TeamQuitRequest;
-import com.simple.maopao.model.request.TeamUpdateRequest;
+import com.simple.maopao.model.request.*;
 import com.simple.maopao.model.vo.TeamUserVO;
 import com.simple.maopao.service.TeamService;
 import com.simple.maopao.service.UserService;
@@ -75,24 +72,6 @@ public class TeamController {
         boolean save = teamService.updateTeam(updateRequest, loginUser);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新队伍失败！");
-        }
-        return ResultUtils.success(true);
-    }
-
-    /**
-     * 删除队伍
-     *
-     * @param id
-     * @return
-     */
-    @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody long id) {
-        if (id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        boolean res = teamService.removeById(id);
-        if (!res) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除队伍失败！");
         }
         return ResultUtils.success(true);
     }
@@ -181,5 +160,24 @@ public class TeamController {
         User loginUser = userService.getLoginUser(request);
         boolean res = teamService.quitTeam(quitRequest, loginUser);
         return ResultUtils.success(res);
+    }
+
+    /**
+     * 删除队伍
+     *
+     * @param delRequest
+     * @return
+     */
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteTeam(@RequestBody TeamDelRequest delRequest, HttpServletRequest request) {
+        if (delRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean res = teamService.deleteTeam(delRequest, loginUser);
+        if (!res) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除队伍失败！");
+        }
+        return ResultUtils.success(true);
     }
 }

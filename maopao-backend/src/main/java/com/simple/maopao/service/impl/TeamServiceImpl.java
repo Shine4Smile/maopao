@@ -11,6 +11,7 @@ import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.domain.UserTeam;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.enums.TeamStatusEnum;
+import com.simple.maopao.model.request.TeamDelRequest;
 import com.simple.maopao.model.request.TeamJoinRequest;
 import com.simple.maopao.model.request.TeamQuitRequest;
 import com.simple.maopao.model.request.TeamUpdateRequest;
@@ -244,14 +245,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Long teamId = joinRequest.getTeamId();
-        if (teamId == null || teamId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        // 获取当前队伍信息
-        Team team = this.getById(teamId);
-        if (team == null) {
-            throw new BusinessException(ErrorCode.NULL_ERROR, "队伍不存在！");
-        }
+        Team team = getTeamById(teamId);
         // 只能加入未过期的队伍
         Date expireTime = team.getExpireTime();
         if (expireTime != null && expireTime.before(new Date())) {
@@ -304,18 +298,13 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean quitTeam(TeamQuitRequest quitRequest, User loginUser) {
         if (quitRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Long teamId = quitRequest.getTeamId();
-        if (teamId == null || teamId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        Team team = this.getById(teamId);
-        if (team == null) {
-            throw new BusinessException(ErrorCode.NULL_ERROR, "队伍不存在！");
-        }
+        Team team = getTeamById(teamId);
         long userId = loginUser.getId();
         UserTeam queryUserTeam = new UserTeam();
         queryUserTeam.setUserId(userId);
@@ -354,6 +343,53 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         // 删除用户-队伍关系
         return userTeamService.remove(queryWrapper);
+    }
+
+
+    /**
+     * 解散队伍
+     *
+     * @param delRequest
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteTeam(TeamDelRequest delRequest, User loginUser) {
+        if (delRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long teamId = delRequest.getTeamId();
+        Team teamById = this.getTeamById(teamId);
+        // 校验是否是队长
+        if (teamById.getUserId() != loginUser.getId()) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "无操作权限！");
+        }
+        // 移除所有的用户-队伍关联关系
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId", teamId);
+        boolean res = userTeamService.remove(queryWrapper);
+        if (!res) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除用户-队伍关系失败！");
+        }
+        // 删除队伍
+        return this.removeById(teamId);
+    }
+
+    /**
+     * 根据队伍id获取队伍信息
+     *
+     * @param teamId
+     * @return
+     */
+    private Team getTeamById(Long teamId) {
+        if (teamId == null || teamId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team team = this.getById(teamId);
+        if (team == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR, "队伍不存在！");
+        }
+        return team;
     }
 
     /**

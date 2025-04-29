@@ -5,13 +5,13 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * 退出队伍请求体
+ * 解散队伍请求体
  */
 @Data
-public class TeamQuitRequest implements Serializable {
+public class TeamDelRequest implements Serializable {
 
 
-    private static final long serialVersionUID = 1064097485609212200L;
+    private static final long serialVersionUID = -4515407914752033284L;
     /**
      * 队伍id
      */

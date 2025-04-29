@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.dto.TeamQuery;
+import com.simple.maopao.model.request.TeamDelRequest;
 import com.simple.maopao.model.request.TeamJoinRequest;
 import com.simple.maopao.model.request.TeamQuitRequest;
 import com.simple.maopao.model.request.TeamUpdateRequest;
@@ -59,4 +60,12 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean quitTeam(TeamQuitRequest quitRequest, User loginUser);
+
+    /**
+     * 解散队伍
+     *
+     * @param delRequest
+     * @return
+     */
+    boolean deleteTeam(TeamDelRequest delRequest, User loginUser);
 }
