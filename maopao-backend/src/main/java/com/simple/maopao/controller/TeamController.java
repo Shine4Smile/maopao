@@ -28,7 +28,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://localhost:5173"}, allowCredentials = "true")
 @Slf4j
 public class TeamController {
 

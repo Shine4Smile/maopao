@@ -35,7 +35,6 @@ import static com.simple.maopao.contant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://localhost:5173"}, allowCredentials = "true")
 @Slf4j
 public class UserController {
 
