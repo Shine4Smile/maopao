@@ -3,6 +3,7 @@ package com.simple.maopao.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.simple.maopao.common.DeleteRequest;
 import com.simple.maopao.common.ErrorCode;
 import com.simple.maopao.exception.BusinessException;
 import com.simple.maopao.mapper.TeamMapper;
@@ -11,7 +12,6 @@ import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.domain.UserTeam;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.enums.TeamStatusEnum;
-import com.simple.maopao.model.request.TeamDelRequest;
 import com.simple.maopao.model.request.TeamJoinRequest;
 import com.simple.maopao.model.request.TeamQuitRequest;
 import com.simple.maopao.model.request.TeamUpdateRequest;
@@ -358,11 +358,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteTeam(TeamDelRequest delRequest, User loginUser) {
+    public boolean deleteTeam(DeleteRequest delRequest, User loginUser) {
         if (delRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long teamId = delRequest.getTeamId();
+        Long teamId = delRequest.getId();
         Team teamById = this.getTeamById(teamId);
         // 校验是否是队长
         if (teamById.getUserId() != loginUser.getId()) {

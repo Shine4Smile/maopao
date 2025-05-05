@@ -3,6 +3,7 @@ package com.simple.maopao.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simple.maopao.common.BaseResponse;
+import com.simple.maopao.common.DeleteRequest;
 import com.simple.maopao.common.ErrorCode;
 import com.simple.maopao.common.ResultUtils;
 import com.simple.maopao.exception.BusinessException;
@@ -10,7 +11,10 @@ import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.domain.UserTeam;
 import com.simple.maopao.model.dto.TeamQuery;
-import com.simple.maopao.model.request.*;
+import com.simple.maopao.model.request.TeamAddRequest;
+import com.simple.maopao.model.request.TeamJoinRequest;
+import com.simple.maopao.model.request.TeamQuitRequest;
+import com.simple.maopao.model.request.TeamUpdateRequest;
 import com.simple.maopao.model.vo.TeamUserVO;
 import com.simple.maopao.service.TeamService;
 import com.simple.maopao.service.UserService;
@@ -176,7 +180,7 @@ public class TeamController {
      * @return
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody TeamDelRequest delRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteTeam(@RequestBody DeleteRequest delRequest, HttpServletRequest request) {
         if (delRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
