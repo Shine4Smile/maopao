@@ -8,18 +8,23 @@ import com.simple.maopao.common.ResultUtils;
 import com.simple.maopao.exception.BusinessException;
 import com.simple.maopao.model.domain.Team;
 import com.simple.maopao.model.domain.User;
+import com.simple.maopao.model.domain.UserTeam;
 import com.simple.maopao.model.dto.TeamQuery;
 import com.simple.maopao.model.request.*;
 import com.simple.maopao.model.vo.TeamUserVO;
 import com.simple.maopao.service.TeamService;
 import com.simple.maopao.service.UserService;
+import com.simple.maopao.service.UserTeamService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 用户接口
@@ -36,6 +41,9 @@ public class TeamController {
 
     @Resource
     private TeamService teamService;
+
+    @Resource
+    private UserTeamService userTeamService;
 
     /**
      * 创建队伍
@@ -178,5 +186,47 @@ public class TeamController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除队伍失败！");
         }
         return ResultUtils.success(true);
+    }
+
+    /**
+     * 查询当前用户创建的队伍列表
+     *
+     * @param teamQuery
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/my/create")
+    public BaseResponse<List<TeamUserVO>> listMyCreate(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        teamQuery.setUserId(loginUser.getId());
+        List<TeamUserVO> resList = teamService.listTeams(teamQuery, true);
+        return ResultUtils.success(resList);
+    }
+
+    /**
+     * 查询当前用户加入的队伍列表
+     *
+     * @param teamQuery
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/my/join")
+    public BaseResponse<List<TeamUserVO>> listMyJoin(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        long userId = loginUser.getId();
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId", userId);
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        Map<Long, List<UserTeam>> listMap = userTeamList.stream().collect(Collectors.groupingBy(UserTeam::getTeamId));
+        List<Long> teamIds = new ArrayList<>(listMap.keySet());
+        teamQuery.setIds(teamIds);
+        List<TeamUserVO> resList = teamService.listTeams(teamQuery, true);
+        return ResultUtils.success(resList);
     }
 }

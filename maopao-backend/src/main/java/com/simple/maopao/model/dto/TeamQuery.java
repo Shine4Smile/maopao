@@ -4,6 +4,8 @@ import com.simple.maopao.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * 队伍查询封装类
  */
@@ -11,9 +13,14 @@ import lombok.EqualsAndHashCode;
 @Data
 public class TeamQuery extends PageRequest {
     /**
-     * id
+     * 队伍id
      */
     private Long id;
+
+    /**
+     * 队伍id列表
+     */
+    private List<Long> ids;
 
     /**
      * 搜索词
