@@ -7,21 +7,21 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.simple.maopao.common.ErrorCode;
 import com.simple.maopao.exception.BusinessException;
-import com.simple.maopao.model.domain.User;
-import com.simple.maopao.service.UserService;
 import com.simple.maopao.mapper.UserMapper;
+import com.simple.maopao.model.domain.User;
+import com.simple.maopao.model.vo.UserVO;
+import com.simple.maopao.service.UserService;
+import com.simple.maopao.utils.AlgorithmUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -296,6 +296,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public boolean isAdmin(User user) {
         // 仅管理员可查询
         return user != null && user.getUserRole() == ADMIN_ROLE;
+    }
+
+    /**
+     * 获取最匹配用户top N
+     *
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public List<UserVO> matchUsers(long num, User loginUser) {
+        List<User> userList = this.list();
+        String tags = loginUser.getTags();
+        Gson gson = new Gson();
+        List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        // 相似度-->用户列表下标，SortedMap默认根据可以排序
+        SortedMap<Long, Integer> indexDistanceMap = new TreeMap<>();
+        for (int i = 0; i < userList.size(); i++) {
+            User user = userList.get(i);
+            String userTags = user.getTags();
+            // 排除当前登录用户
+            if (user.getId() == loginUser.getId()) {
+                continue;
+            }
+            // 用户标签为空时跳过
+            if (StringUtils.isBlank(userTags) || "[]".equals(userTags)) {
+                continue;
+            }
+            List<String> userTagList = gson.fromJson(userTags, new TypeToken<List<String>>() {
+            }.getType());
+            // 计算相似度
+            long distance = AlgorithmUtils.minDistance(tagList, userTagList);
+            indexDistanceMap.put(distance, i);
+        }
+        List<Integer> maxDistanceIndexList = indexDistanceMap.values().stream().limit(num).collect(Collectors.toList());
+        List<UserVO> voList = new ArrayList<>();
+        maxDistanceIndexList.forEach(index -> {
+            User user = userList.get(index);
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            voList.add(userVO);
+        });
+        return voList;
     }
 
 

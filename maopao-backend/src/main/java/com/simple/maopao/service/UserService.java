@@ -1,8 +1,8 @@
 package com.simple.maopao.service;
 
-import com.simple.maopao.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.springframework.web.bind.annotation.RequestBody;
+import com.simple.maopao.model.domain.User;
+import com.simple.maopao.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -84,4 +84,13 @@ public interface UserService extends IService<User> {
     boolean isAdmin(HttpServletRequest request);
 
     boolean isAdmin(User user);
+
+    /**
+     * 获取最匹配用户top N
+     *
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    List<UserVO> matchUsers(long num, User loginUser);
 }

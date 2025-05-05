@@ -54,9 +54,10 @@ public class InsertTestUser {
         for (int i = 0; i < 10; i++) {
             List<User> list = new ArrayList<>();
             while (true) {
+                j++;
                 User user = new User();
-                user.setUserName("测试用户" + i);
-                user.setUserAccount("测试用户" + i);
+                user.setUserName("测试用户" + i + "-" + j);
+                user.setUserAccount("测试用户" + i + "-" + j);
                 user.setAvatarUrl("https://img.icons8.com/?size=512&id=Va7lNc72i71b&format=png");
                 user.setGender(0);
                 user.setUserPassword("047e6040179b5d1bf6ff89dd07b7e652");
