@@ -1,5 +1,6 @@
 package com.simple.maopao.service.impl;
 
+import cn.hutool.core.lang.Pair;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,12 +10,10 @@ import com.simple.maopao.common.ErrorCode;
 import com.simple.maopao.exception.BusinessException;
 import com.simple.maopao.mapper.UserMapper;
 import com.simple.maopao.model.domain.User;
-import com.simple.maopao.model.vo.UserVO;
 import com.simple.maopao.service.UserService;
 import com.simple.maopao.utils.AlgorithmUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -306,14 +305,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return
      */
     @Override
-    public List<UserVO> matchUsers(long num, User loginUser) {
-        List<User> userList = this.list();
+    public List<User> matchUsers(long num, User loginUser) {
+        // 提高查询速度：查询需要的字段，并进行tags空值过滤
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "tags");
+        queryWrapper.isNotNull("tags");
+        List<User> userList = this.list(queryWrapper);
         String tags = loginUser.getTags();
         Gson gson = new Gson();
         List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {
         }.getType());
-        // 相似度-->用户列表下标，SortedMap默认根据可以排序
-        SortedMap<Long, Integer> indexDistanceMap = new TreeMap<>();
+        // 使用Pair存储用户和分数，SortedMap默认根据key排序
+        List<Pair<User, Long>> list = new ArrayList<>();
+        // 依次计算当前登录用户和所有用户的的相似度
         for (int i = 0; i < userList.size(); i++) {
             User user = userList.get(i);
             String userTags = user.getTags();
@@ -329,17 +333,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             }.getType());
             // 计算相似度
             long distance = AlgorithmUtils.minDistance(tagList, userTagList);
-            indexDistanceMap.put(distance, i);
+            list.add(new Pair<>(user, distance));
         }
-        List<Integer> maxDistanceIndexList = indexDistanceMap.values().stream().limit(num).collect(Collectors.toList());
-        List<UserVO> voList = new ArrayList<>();
-        maxDistanceIndexList.forEach(index -> {
-            User user = userList.get(index);
-            UserVO userVO = new UserVO();
-            BeanUtils.copyProperties(user, userVO);
-            voList.add(userVO);
-        });
-        return voList;
+        // 按编辑距离由小到大排序
+        List<Pair<User, Long>> topUserPairList = list.stream()
+                .sorted((a, b) -> (int) (a.getValue() - b.getValue()))
+                .limit(num)
+                .collect(Collectors.toList());
+        // 排序后的顺序的 userId 列表
+        List<Long> userIdList = topUserPairList.stream().map(pair -> pair.getKey().getId()).collect(Collectors.toList());
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.in("id", userIdList);
+        Map<Long, List<User>> userIdUserListMap = this.list(userQueryWrapper)
+                .stream()
+                .map(this::getSafetyUser)
+                .collect(Collectors.groupingBy(User::getId));
+        List<User> finalUserList = new ArrayList<>();
+        for (Long userId : userIdList) {
+            finalUserList.add(userIdUserListMap.get(userId).get(0));
+        }
+        return finalUserList;
     }
 
 

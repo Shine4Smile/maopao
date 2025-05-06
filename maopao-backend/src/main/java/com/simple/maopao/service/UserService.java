@@ -2,7 +2,6 @@ package com.simple.maopao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.simple.maopao.model.domain.User;
-import com.simple.maopao.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -92,5 +91,5 @@ public interface UserService extends IService<User> {
      * @param loginUser
      * @return
      */
-    List<UserVO> matchUsers(long num, User loginUser);
+    List<User> matchUsers(long num, User loginUser);
 }

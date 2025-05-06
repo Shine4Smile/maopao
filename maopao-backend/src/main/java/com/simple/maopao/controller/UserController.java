@@ -11,7 +11,6 @@ import com.simple.maopao.exception.BusinessException;
 import com.simple.maopao.model.domain.User;
 import com.simple.maopao.model.request.UserLoginRequest;
 import com.simple.maopao.model.request.UserRegisterRequest;
-import com.simple.maopao.model.vo.UserVO;
 import com.simple.maopao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -229,7 +228,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/match")
-    public BaseResponse<List<UserVO>> matchUsers(long num, HttpServletRequest request) {
+    public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request) {
         if (num <= 0 || num > 20) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
